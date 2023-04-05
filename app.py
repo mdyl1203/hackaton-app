@@ -17,7 +17,7 @@ def jwks():
             'use': 'sig',
             'alg': 'RS256',
             'n': base64.urlsafe_b64encode(n_bytes).decode('utf-8').rstrip('='),
-            'e': base64.urlsafe_b64encode(e_bytes).decode('utf-8').rstrip('=')
+            'e': "AQAB"
         }
         jwks = {
             'keys': [jwk]
