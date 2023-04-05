@@ -10,12 +10,10 @@ def jwks():
     with open('public_key.pem', 'rb') as key_file:
         public_key = serialization.load_pem_public_key(key_file.read(), backend=default_backend())
         n_bytes = public_key.public_numbers().n.to_bytes((public_key.key_size + 7) // 8, byteorder='big')
-        e_bytes = public_key.public_numbers().e.to_bytes((public_key.key_size + 7) // 8, byteorder='big')
         jwk = {
             'kty': 'RSA',
-            'kid': 'my_key',
+            'kid': 'qBaNXKwJvjxnGAuCv53Rtg',
             'use': 'sig',
-            'alg': 'RS256',
             'n': base64.urlsafe_b64encode(n_bytes).decode('utf-8').rstrip('='),
             'e': "AQAB"
         }
