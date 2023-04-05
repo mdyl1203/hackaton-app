@@ -48,9 +48,9 @@ def jwks():
 
 
 # Create a server status endpoint
-@app.route('/status')
+@app.route('/health_check')
 def status():
-    return jsonify({'status': 'alive'})
+    return jsonify({'health_check': 'alive'})
 
 
 if __name__ == '__main__':
