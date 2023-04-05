@@ -1,55 +1,63 @@
+from flask import Flask, jsonify
 import jwt
 from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives import serialization
-from flask import Flask, jsonify
+from cryptography.hazmat.backends import default_backend
 
 app = Flask(__name__)
 
-# Generate a key pair
-key = rsa.generate_private_key(
+# Generate RSA key pair
+private_key = rsa.generate_private_key(
     public_exponent=65537,
-    key_size=2048
+    key_size=2048,
+    backend=default_backend()
 )
-private_key = key.private_bytes(
-    encoding=serialization.Encoding.PEM,
-    format=serialization.PrivateFormat.PKCS8,
-    encryption_algorithm=serialization.NoEncryption()
-)
-public_key = key.public_key().public_bytes(
-    encoding=serialization.Encoding.PEM,
-    format=serialization.PublicFormat.SubjectPublicKeyInfo
-)
-rsa_public_key = serialization.load_pem_public_key(public_key)
+public_key = private_key.public_key()
+
+# Convert keys to JWK format
+private_jwk = {
+    'kty': 'RSA',
+    'kid': 'my-key-id',
+    'use': 'sig',
+    'alg': 'RS256',
+    'n': public_key.public_numbers().n,
+    'e': public_key.public_numbers().e,
+    'd': private_key.private_numbers().d,
+    'p': private_key.private_numbers().p,
+    'q': private_key.private_numbers().q,
+    'dp': private_key.private_numbers().dmp1,
+    'dq': private_key.private_numbers().dmq1,
+    'qi': private_key.private_numbers().iqmp
+}
+public_jwk = {
+    'kty': 'RSA',
+    'kid': 'my-key-id',
+    'use': 'sig',
+    'alg': 'RS256',
+    'n': public_key.public_numbers().n,
+    'e': public_key.public_numbers().e
+}
 
 
-# Create a function to sign JWTs
-def sign_jwt(payload, private_key):
-    token = jwt.encode(
-        payload,
-        private_key,
-        algorithm='RS256'
-    )
-    return token
-
-
-# Create a JWKS endpoint
-@app.route('/jwks')
+# Endpoint to get JWKs
+@app.route('/jwks.json')
 def jwks():
-    public_numbers = rsa_public_key.public_numbers()
-    jwk = {
-        'kty': 'RSA',
-        'use': 'sig',
-        'kid': 'mykey',
-        'n': public_numbers.n,
-        'e': public_numbers.e
-    }
-    return jsonify({'keys': [jwk]})
+    return jsonify({
+        'keys': [public_jwk]
+    })
+
+
+# Endpoint to generate and sign JWT
+@app.route('/jwt')
+def jwt_endpoint():
+    payload = {'sub': '1234567890', 'name': 'John Doe'}
+    encoded_jwt = jwt.encode(payload, private_key, algorithm='RS256')
+    return encoded_jwt
 
 
 # Create a server status endpoint
-@app.route('/health_check')
+@app.route('/status')
 def status():
-    return jsonify({'health_check': 'alive'})
+    return jsonify({'status': 'alive'})
 
 
 if __name__ == '__main__':
