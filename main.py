@@ -38,7 +38,6 @@ def jwks():
     public_numbers = rsa_public_key.public_numbers()
     jwk = {
         'kty': 'RSA',
-        'alg': 'RS256',
         'use': 'sig',
         'kid': 'mykey',
         'n': public_numbers.n,
